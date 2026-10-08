@@ -1,0 +1,37 @@
+# app-quality-polish / a11y.yml
+# Accessibility is part of quality, not a separate track.
+version: 1
+
+blocking: true
+
+contrast:
+  body_text_min: 4.5
+  large_text_min: 3.0
+  ui_components_min: 3.0
+  check: [light, dark, highContrast]
+
+touch:
+  ios_min_pt: 44
+  android_min_dp: 48
+  spacing_min_dp: 8
+
+dynamic_type:
+  supported: true
+  max_scale: 2.0
+  layout: must_scroll_not_clip
+
+screen_reader:
+  labels_on_all_interactive: true
+  focus_order: logical
+  announcements: [page_change, error, loading_done]
+
+focus:
+  visible_indicator: true
+  trap_in_modals: true
+
+motion:
+  honor_reduced_motion: true
+
+ci:
+  scan_on: [pull_request]
+  fail_build_on: [contrast, touch_target, missing_label]

@@ -1,0 +1,57 @@
+# app-quality-polish / component-state.yml
+# Dimension: Attribute / State, applied to components. No component ships with only its default state.
+version: 1
+
+defaults:
+  feedbackWithinMs: 100
+  minTouchTarget: 44
+  hapticOnPress: light
+
+components:
+
+  comp.button.primary:
+    owner: design-system
+    required_states: [default, pressed, disabled, loading, success, error]
+    variants:
+      size: { type: enum, values: [sm, md, lg], default: md }
+      tone: { type: enum, values: [brand, danger], default: brand }
+    states:
+      default:  { bg: token.color.brand.primary,        text: token.color.text.onBrand }
+      pressed:  { bg: token.color.brand.primaryPressed, scale: 0.98, haptic: light }
+      disabled: { opacity: 0.4, interactive: false }
+      loading:  { spinner: true, disabled: true }
+      success:  { icon: check, haptic: light }
+      error:    { tone: danger }
+    gate: [no_double_submit, feedback_100ms, error_copy_mapped]
+
+  comp.input.text:
+    owner: design-system
+    required_states: [default, focus, filled, error, disabled, loading]
+    states:
+      default:  { border: token.color.border.subtle }
+      focus:    { border: token.color.brand.primary }
+      filled:   { text: token.color.text.primary }
+      error:    { border: token.color.state.danger, helperText: copy.error.field }
+      disabled: { opacity: 0.4, interactive: false }
+      loading:  { spinner: true, disabled: true }
+
+  comp.list:
+    owner: design-system
+    required_states: [loading, empty, error, offline, noAuth, loadingMore, end]
+    states:
+      loading:    { skeleton: true, rows: 6 }
+      empty:      { illustration: true, copy: copy.empty.default, action: true }
+      error:      { copy: copy.error.retry, action: retry }
+      offline:    { copy: copy.offline.cached, showTimestamp: true }
+      noAuth:     { copy: copy.auth.required, action: login }
+      loadingMore: { footerSpinner: true }
+      end:        { footerCopy: copy.list.end }
+
+  comp.image:
+    owner: design-system
+    required_states: [placeholder, loading, success, error]
+    states:
+      placeholder: { ratioLocked: true }
+      loading:     { progressive: true }
+      success:     { fadeIn: true }
+      error:       { fallback: placeholder, action: retry }

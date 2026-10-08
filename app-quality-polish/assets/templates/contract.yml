@@ -1,0 +1,468 @@
+# app-quality-polish / contract.yml
+# NORMATIVE. This file is the single source of truth for acceptance.
+# Every clause must be verified before release. See scripts/verify_contract.py.
+#
+# levels:      MUST | MUST NOT | SHOULD
+# enforcement: blocking | advisory   (an UNVERIFIED blocking clause is NOT ACCEPTED)
+# verify:      method: static    -> machine-checked against the config graph
+#              method: evidence  -> requires an evidence record, fresh and passing
+#              file_pattern      -> one evidence record per declared axis
+#
+# Change control: editing any threshold or adding a clause requires bumping
+# contract.version. Loosening a threshold below the template voids the contract.
+
+contract:
+  id: app-quality-polish
+  version: "1.2.0"  # 1.2.0: runtime axis (Flutter / React Native) + HarmonyOS + desktop
+  acceptance_rule: all_blocking_clauses_pass
+  unverified_is_failure: true
+
+clauses:
+
+  # ---------- Entity ----------
+  - id: ENT-01
+    dim: entity
+    level: MUST
+    enforcement: blocking
+    requirement: Every declared entity must carry type, owner, lifecycle, source and gate.
+    verify: { method: static, check: entities_have_required_fields }
+    evidence: entities.yml
+
+  - id: ENT-02
+    dim: entity
+    level: MUST NOT
+    enforcement: blocking
+    requirement: No orphan components. Every entity of type "component" must be referenced by at least one scenario.
+    verify: { method: static, check: no_orphan_components }
+    evidence: entities.yml + scenarios.yml
+
+  - id: ENT-03
+    dim: entity
+    level: MUST
+    enforcement: blocking
+    requirement: entity_types must cover app/page/component/element/token/motion/copy/data/net/perm/theme/a11y.
+    verify: { method: static, check: entity_types_complete }
+    evidence: entities.yml
+
+  # ---------- Attribute / State ----------
+  - id: STA-01
+    dim: state
+    level: MUST
+    enforcement: blocking
+    requirement: Every state machine must declare attrs, states and transitions together.
+    verify: { method: static, check: state_machines_present }
+    evidence: states.yml
+
+  - id: STA-02
+    dim: state
+    level: MUST
+    enforcement: blocking
+    requirement: The page state machine must cover all six states loading/success/empty/error/offline/noAuth.
+    verify: { method: static, check: page_states_complete }
+    evidence: page-state.yml
+
+  - id: STA-03
+    dim: state
+    level: MUST
+    enforcement: blocking
+    requirement: Every error-class state (error/fail/offline/timeout/denied/restricted) must have at least one outgoing edge, i.e. a recovery path.
+    verify: { method: static, check: error_states_have_recovery }
+    evidence: states.yml
+
+  - id: STA-04
+    dim: state
+    level: MUST
+    enforcement: blocking
+    requirement: Every implemented state must have a record of entry, exit, visual, copy and feedback, with screenshot or link.
+    verify:
+      method: evidence
+      file: evidence/STA-04.yml
+      max_age_days: 30
+    evidence: evidence/STA-04.yml
+
+  - id: STA-05
+    dim: state
+    level: MUST NOT
+    enforcement: blocking
+    requirement: loading and error must never render at the same time; an excludes declaration must exist.
+    verify: { method: static, check: no_state_conflict }
+    evidence: relations.yml
+
+  # ---------- Relation ----------
+  - id: REL-01
+    dim: relation
+    level: MUST
+    enforcement: blocking
+    requirement: The relation graph must be acyclic.
+    verify: { method: static, check: relations_no_cycles }
+    evidence: relations.yml
+
+  - id: REL-02
+    dim: relation
+    level: MUST NOT
+    enforcement: blocking
+    requirement: Component and page configs must not contain raw colour values (hex); they may only reference semantic tokens.
+    verify: { method: static, check: no_raw_value_in_components }
+    evidence: component-state.yml + page-state.yml
+
+  - id: REL-03
+    dim: relation
+    level: MUST
+    enforcement: blocking
+    requirement: Every page entity in entities.yml must have a matching entry in page-state.yml.
+    verify: { method: static, check: pages_cover_all_states }
+    evidence: entities.yml + page-state.yml
+
+  - id: REL-04
+    dim: relation
+    level: MUST
+    enforcement: blocking
+    requirement: scenes_must_cover must include slow_network, dark_mode and large_text.
+    verify: { method: static, check: scenes_cover_required }
+    evidence: relations.yml
+
+  # ---------- Scenario ----------
+  - id: SCN-01
+    dim: scenario
+    level: MUST
+    enforcement: blocking
+    requirement: Every scenario must declare entities, states, expect, exception and gate.
+    verify: { method: static, check: scenarios_have_fields }
+    evidence: scenarios.yml
+
+  - id: SCN-02
+    dim: scenario
+    level: MUST
+    enforcement: blocking
+    requirement: The P0 scenario set must include S01,S02,S04,S06,S07,S08,S10,S11,S12,S13,S14,S15.
+    verify: { method: static, check: p0_scenarios_defined }
+    evidence: scenarios.yml
+
+  - id: SCN-03
+    dim: scenario
+    level: MUST
+    enforcement: blocking
+    requirement: must_test must include slow_network, dark_mode, large_text and a11y.
+    verify: { method: static, check: must_test_covers }
+    evidence: scenarios.yml
+
+  - id: SCN-04
+    dim: scenario
+    level: MUST
+    enforcement: blocking
+    requirement: All P0 scenarios must have been executed with a retained record.
+    verify:
+      method: evidence
+      file: evidence/SCN-04.yml
+      max_age_days: 14
+      assert: { path: measured.passed_p0_count, op: ">=", value: 12 }
+    evidence: evidence/SCN-04.yml
+
+  # ---------- Flow ----------
+  - id: FLW-01
+    dim: flow
+    level: MUST
+    enforcement: blocking
+    requirement: Every flow must declare terminal_states and paths including normal, error and recovery.
+    verify: { method: static, check: flows_declare_terminal }
+    evidence: flows.yml
+
+  - id: FLW-02
+    dim: flow
+    level: MUST
+    enforcement: blocking
+    requirement: Non-terminal nodes must have at least one outgoing edge; terminal nodes must have none.
+    verify: { method: static, check: flows_no_dead_end }
+    evidence: flows.yml
+
+  - id: FLW-03
+    dim: flow
+    level: MUST NOT
+    enforcement: blocking
+    requirement: An error-class state must never be declared terminal.
+    verify: { method: static, check: flows_no_terminal_error }
+    evidence: flows.yml
+
+  - id: FLW-04
+    dim: flow
+    level: MUST
+    enforcement: blocking
+    requirement: The feedback budget feedback_within_ms must be at most 100.
+    verify: { method: static, check: flows_feedback_budget }
+    evidence: flows.yml
+
+  - id: FLW-05
+    dim: flow
+    level: MUST
+    enforcement: blocking
+    requirement: Every node in a flow graph must be reachable from the first step.
+    verify: { method: static, check: flows_all_reachable }
+    evidence: flows.yml
+
+  # ---------- Token ----------
+  - id: TOK-01
+    dim: token
+    level: MUST
+    enforcement: blocking
+    requirement: Every colour token must define both a light and a dark value.
+    verify: { method: static, check: tokens_have_dark }
+    evidence: design-token.json
+
+  - id: TOK-02
+    dim: token
+    level: MUST
+    enforcement: blocking
+    requirement: The body text contrast floor contrast.min must be at least 4.5.
+    verify: { method: static, check: token_contrast_min, op: ">=", value: 4.5 }
+    evidence: design-token.json
+
+  - id: TOK-03
+    dim: token
+    level: MUST
+    enforcement: blocking
+    requirement: The touch target floor must be at least 44pt on iOS and 48dp on Android.
+    verify: { method: static, check: token_touch_min }
+    evidence: design-token.json
+
+  - id: TOK-04
+    dim: token
+    level: MUST NOT
+    enforcement: blocking
+    requirement: No config outside design-token.json may contain a raw colour value.
+    verify: { method: static, check: no_raw_hex_outside_token }
+    evidence: all config files
+
+  - id: TOK-05
+    dim: token
+    level: MUST
+    enforcement: blocking
+    requirement: The type scale must not exceed five levels.
+    verify: { method: static, check: font_levels_max, op: "<=", value: 5 }
+    evidence: design-token.json
+
+  # ---------- Motion ----------
+  - id: MOT-01
+    dim: motion
+    level: MUST
+    enforcement: blocking
+    requirement: No animation may exceed 350ms; animations marked as loops (loop is true) are exempt but must declare it explicitly.
+    verify: { method: static, check: motion_max_duration, op: "<=", value: 350 }
+    evidence: motion.json
+
+  - id: MOT-02
+    dim: motion
+    level: MUST
+    enforcement: blocking
+    requirement: honorReducedMotion must be declared and the system reduced-motion setting must be respected.
+    verify: { method: static, check: motion_reduced }
+    evidence: motion.json
+
+  - id: MOT-03
+    dim: motion
+    level: MUST
+    enforcement: blocking
+    requirement: Entrance animations must use the enter curve or a spring.
+    verify: { method: static, check: motion_enter_easing }
+    evidence: motion.json
+
+  - id: MOT-04
+    dim: motion
+    level: MUST
+    enforcement: blocking
+    requirement: Every token.* reference in motion.json must resolve against design-token.json.
+    verify: { method: static, check: motion_token_resolution }
+    evidence: motion.json + design-token.json
+
+  # ---------- Copy ----------
+  - id: CPY-01
+    dim: copy
+    level: MUST
+    enforcement: blocking
+    requirement: copy.yml must declare a non-empty forbidden-string list.
+    verify: { method: static, check: copy_forbidden_present }
+    evidence: copy.yml
+
+  - id: CPY-02
+    dim: copy
+    level: MUST NOT
+    enforcement: blocking
+    requirement: No forbidden string may appear in the copy body.
+    verify: { method: static, check: copy_no_forbidden_values }
+    evidence: copy.yml
+
+  - id: CPY-03
+    dim: copy
+    level: MUST
+    enforcement: blocking
+    requirement: Copy must exist for the empty/error/offline/auth/permission/success/confirm/list scenes.
+    verify: { method: static, check: copy_scenes_complete }
+    evidence: copy.yml
+
+  - id: CPY-04
+    dim: copy
+    level: MUST
+    enforcement: blocking
+    requirement: The delete confirmation must be marked destructive and state the consequence.
+    verify: { method: static, check: copy_destructive_delete }
+    evidence: copy.yml
+
+  # ---------- Performance ----------
+  - id: PRF-01
+    dim: perf
+    level: MUST
+    enforcement: blocking
+    requirement: All performance budgets must be declared, covering cold start, first screen, click response, scroll frame rate, crash rate and ANR.
+    verify: { method: static, check: perf_budgets_declared }
+    evidence: perf-budget.yml
+
+  - id: PRF-02
+    dim: perf
+    level: MUST
+    enforcement: blocking
+    requirement: Measured cold start P90 must be under 2000ms.
+    verify:
+      method: evidence
+      file: evidence/PRF-02.yml
+      max_age_days: 7
+      assert: { path: measured.cold_start_p90_ms, op: "<", value: 2000 }
+    evidence: evidence/PRF-02.yml
+
+  - id: PRF-03
+    dim: perf
+    level: MUST
+    enforcement: blocking
+    requirement: Measured crash rate and ANR rate must each be under 0.1%.
+    verify:
+      method: evidence
+      file: evidence/PRF-03.yml
+      max_age_days: 7
+      assert: { path: measured.crash_rate, op: "<", value: 0.001 }
+    evidence: evidence/PRF-03.yml
+
+  # ---------- Accessibility ----------
+  - id: A11Y-01
+    dim: a11y
+    level: MUST
+    enforcement: blocking
+    requirement: The a11y config must be blocking and declare all three contrast tiers (body, large and UI).
+    verify: { method: static, check: a11y_contrast_scan_config }
+    evidence: a11y.yml
+
+  - id: A11Y-02
+    dim: a11y
+    level: MUST
+    enforcement: blocking
+    requirement: Touch targets must be at least 44pt on iOS and 48dp on Android.
+    verify: { method: static, check: a11y_touch }
+    evidence: a11y.yml
+
+  - id: A11Y-03
+    dim: a11y
+    level: MUST
+    enforcement: blocking
+    requirement: Dynamic type must be declared as supported and the layout must scroll rather than clip.
+    verify: { method: static, check: a11y_dynamic_type }
+    evidence: a11y.yml
+
+  - id: A11Y-04
+    dim: a11y
+    level: MUST
+    enforcement: blocking
+    requirement: The accessibility scan must report zero violations.
+    verify:
+      method: evidence
+      file: evidence/A11Y-04.yml
+      max_age_days: 30
+      assert: { path: measured.violations, op: "==", value: 0 }
+    evidence: evidence/A11Y-04.yml
+
+  # ---------- Platform / Runtime ----------
+  # Per-axis constraints live in platforms/<id>.yml. These clauses iterate the
+  # declared axes, so a project only owes obligations for what it actually ships.
+  - id: PLT-01
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: Targets and runtimes must be declared, and every profile must exist, parse, match its platform and kind fields, and declare at least one capability.
+    verify: { method: static, check: platforms_have_profiles }
+    evidence: platforms.yml + platforms/*.yml
+
+  - id: PLT-02
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: Every declared axis must have a unit mapping (pt/dp/vp/px/rpx/logical_px) matching its profile.
+    verify: { method: static, check: platform_units_declared }
+    evidence: platforms.yml
+
+  - id: PLT-03
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: Every capability listed in a profile must be declared in platforms.yml as implemented with a location, or not_applicable with a reason.
+    verify: { method: static, check: platform_capabilities_declared }
+    evidence: platforms.yml
+
+  - id: PLT-04
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: Declared thresholds must never be looser than the profile. Keys containing _min are floors and must be greater or equal; keys containing _max are ceilings and must be less or equal; no threshold may be omitted.
+    verify: { method: static, check: platform_thresholds_met }
+    evidence: platforms.yml + platforms/*.yml
+
+  - id: PLT-05
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: Every declared axis must have a visual regression baseline for its core pages.
+    verify:
+      method: evidence
+      file_pattern: evidence/PLT-05-{platform}.yml
+      max_age_days: 30
+    evidence: evidence/PLT-05-<axis>.yml
+
+  - id: PLT-06
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: Every declared axis must complete its device matrix with zero failures.
+    verify:
+      method: evidence
+      file_pattern: evidence/PLT-06-{platform}.yml
+      max_age_days: 14
+      assert: { path: measured.failures, op: "==", value: 0 }
+    evidence: evidence/PLT-06-<axis>.yml
+
+  - id: PLT-07
+    dim: platform
+    level: MUST
+    enforcement: blocking
+    requirement: A declared runtime must cover at least one declared platform. A runtime is not a platform; it is only meaningful where its host platforms are declared.
+    verify: { method: static, check: runtime_hosts_declared }
+    evidence: platforms.yml + platforms/<runtime>.yml
+
+  # ---------- Gate ----------
+  - id: GAT-01
+    dim: gate
+    level: MUST
+    enforcement: blocking
+    requirement: The P0 gate must be blocking and contain at least seven checks.
+    verify: { method: static, check: gate_p0_complete, op: ">=", value: 7 }
+    evidence: release-gate.yml
+
+  - id: GAT-02
+    dim: gate
+    level: MUST
+    enforcement: blocking
+    requirement: CI fail_build_on must include both P0 and P1.
+    verify: { method: static, check: gate_ci_fail_on }
+    evidence: release-gate.yml
+
+  - id: GAT-03
+    dim: gate
+    level: MUST
+    enforcement: blocking
+    requirement: Contract self-consistency. Every clause must declare id, dim, level, enforcement, requirement and verify.
+    verify: { method: static, check: contract_self_consistent }
+    evidence: contract.yml

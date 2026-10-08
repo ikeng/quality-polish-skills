@@ -1,0 +1,21 @@
+# app-quality-polish / perf-budget.yml
+# Performance is the floor of perceived quality. Budgets are enforced in CI; blockers fail the build.
+version: 1
+
+blocking: true
+
+budgets:
+
+  cold_start_p90_ms:      { target: 2000, measure: launch_to_first_screen, tools: [Instruments, Perfetto] }
+  first_screen_ttl_ms:    { target: 1000, measure: first_interactive,      tools: [Lighthouse, Perfetto] }
+  click_response_p90_ms:  { target: 100,  measure: tap_to_feedback,        tools: [device_trace] }
+  scroll_fps_min:         { target: 58,   measure: long_list_scroll,      tools: [gpu_rendering] }
+  package_delta_kb:       { target: 500,  measure: version_diff,          tools: [build_artifact], warnOnly: true }
+  image_size_kb:          { target: 200,  measure: single_image,          tools: [build_check],    warnOnly: true }
+  crash_rate:             { target: 0.001, measure: production,           tools: [Sentry, Firebase] }
+  anr_rate:               { target: 0.001, measure: production,           tools: [platform_console] }
+
+ci:
+  run_on: [pull_request, release_branch]
+  fail_build_on: [cold_start, first_screen, click_response, scroll_fps, crash_rate, anr_rate]
+  report_artifact: perf-report.json

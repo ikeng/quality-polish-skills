@@ -1,0 +1,59 @@
+# app-quality-polish runtime profile: Flutter
+# Flutter is a RUNTIME, not a platform: it renders the same widget tree onto
+# iOS / Android / Web / H5 / Desktop. Quality here is about the Flutter engine
+# (frame budget, repaint scope) and about NOT erasing the host platform's feel.
+platform: flutter
+kind: runtime
+label: Flutter
+unit: logical_px
+hosts: [ios, android, web, h5, desktop]
+# NOTE: harmonyos is not a host for mainline Flutter. If you ship the
+# Huawei or community Flutter fork to HarmonyOS, add harmonyos to hosts; that is
+# a recorded decision, and PLT-07 will hold you to it.
+runtime: [Impeller, Skia]
+
+thresholds:
+  touch_target_min_lpx: 48
+  contrast_min: 4.5
+  frame_build_max_ms: 8        # UI thread budget per frame
+  frame_raster_max_ms: 8       # raster thread budget per frame
+  jank_frame_max_ratio: 0.01   # share of janky frames
+  release_package_max_mb: 30
+
+capabilities:
+
+  - id: const_widgets
+    requirement: Static subtrees must be const wherever possible so setState does not rebuild the whole tree.
+    failure_mode: Scrolling jank, with rebuild counts exploding in DevTools.
+
+  - id: repaint_boundary
+    requirement: Frequently repainting regions such as animations and nested scrolling lists must be isolated with RepaintBoundary.
+    failure_mode: A local animation forces a full-screen repaint.
+
+  - id: media_query_insets
+    requirement: MediaQuery.viewPadding and viewInsets must be used for safe areas and the keyboard.
+    failure_mode: Bottom buttons are covered, or the keyboard hides the focused input.
+
+  - id: platform_adaptive
+    requirement: A Material or Cupertino adaptive strategy must be declared so scroll physics, transitions and back gestures match the host platform.
+    failure_mode: Android transitions and scroll physics appear on iOS, and the app immediately feels foreign.
+
+  - id: image_decode_budget
+    requirement: Image decode size and caching must be declared via cacheWidth, cacheHeight and precacheImage.
+    failure_mode: Full-resolution decoding of large images causes memory spikes and OOM.
+
+  - id: semantics_labels
+    requirement: Semantics must provide screen-reader labels and focus order.
+    failure_mode: Custom-painted components are unreachable by screen readers.
+
+  - id: deferred_components
+    requirement: Deferred components or route-level lazy loading plus a first-package budget must be declared.
+    failure_mode: The first package is too large and users abandon the download.
+
+  - id: no_channel_in_hot_path
+    requirement: MethodChannel calls must not appear on scrolling or animation hot paths.
+    failure_mode: Per-frame cross-platform messaging causes stutter.
+
+evidence:
+  visual_baseline: Screenshots per host platform (differences must be intentional)
+  device_matrix: Device matrix run plus DevTools performance recordings (build and raster timings, memory curve)

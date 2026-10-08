@@ -1,0 +1,59 @@
+# app-quality-polish / page-state.yml
+# Every page must cover all six states. An error state without a recovery path is a P0.
+version: 1
+
+required_states: [loading, success, empty, error, offline, noAuth]
+rules:
+  no_white_screen: true
+  error_must_have_recovery: [retry, back, cached, open_settings]
+  offline_must_show: [cached_content, timestamp, retry]
+
+pages:
+
+  page.home:
+    loading: { type: skeleton, rows: 4 }
+    success: { showRefreshTime: true }
+    empty:   { copy: copy.empty.home, action: create }
+    error:   { copy: copy.error.retry, action: retry, cache: last_good }
+    offline: { cache: last_good, copy: copy.offline.cached, showTimestamp: true }
+    noAuth:  { copy: copy.auth.required, action: login }
+
+  page.search:
+    loading: { type: skeleton, rows: 3 }
+    success: { items: results }
+    empty:   { copy: copy.empty.search, suggestions: true }
+    error:   { copy: copy.error.retry, action: retry }
+    offline: { cache: local_history }
+    noAuth:  { hidden: true }
+
+  page.list:
+    loading:     { type: skeleton, rows: 6 }
+    success:     { pagination: true }
+    empty:       { copy: copy.empty.default, action: create }
+    error:       { copy: copy.error.retry, action: retry }
+    offline:     { cache: last_good, showTimestamp: true }
+    noAuth:      { copy: copy.auth.required, action: login }
+
+  page.detail:
+    loading: { type: skeleton, rows: 3 }
+    success: { cache: true }
+    empty:   { copy: copy.empty.removed }
+    error:   { copy: copy.error.retry, action: retry }
+    offline: { cache: last_good }
+    noAuth:  { copy: copy.auth.required, action: login }
+
+  page.form:
+    loading: {}
+    success: { haptic: success, toast: copy.success.saved }
+    empty:   {}
+    error:   { fieldLevel: true, focusFirstError: true }
+    offline: { draft: local }
+    noAuth:  { copy: copy.auth.required, action: login }
+
+  page.settings:
+    loading: { type: skeleton, rows: 2 }
+    success: { applyImmediately: true }
+    empty:   {}
+    error:   { copy: copy.error.retry, action: retry }
+    offline: { cache: local }
+    noAuth:  {}

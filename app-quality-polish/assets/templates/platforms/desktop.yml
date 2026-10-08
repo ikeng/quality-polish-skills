@@ -1,0 +1,60 @@
+# app-quality-polish platform profile: Desktop (macOS / Windows / Linux)
+# Desktop has no touch assumption, a resizable window instead of a fixed
+# viewport, and a keyboard as a first-class input. Most defects come from
+# ignoring resize, focus and DPI rather than from layout itself.
+platform: desktop
+kind: platform
+label: Desktop
+unit: px
+hosts: [macos, windows, linux]
+runtime: [Electron, Tauri, native]
+
+thresholds:
+  contrast_min: 4.5
+  click_target_min_px: 28
+  window_width_min_px: 800
+  window_height_min_px: 600
+  zoom_percent_min: 200
+  startup_max_ms: 2000
+
+capabilities:
+
+  - id: keyboard_shortcuts
+    requirement: A menu bar and keyboard shortcuts must be provided, including Cmd versus Ctrl differences; core tasks must not be mouse-only.
+    failure_mode: Keyboard users cannot complete the core task.
+
+  - id: window_resize
+    requirement: The minimum window size and per-breakpoint layout must be declared; at any size there must be no horizontal scrolling or clipped content.
+    failure_mode: Narrowing the window makes buttons disappear.
+
+  - id: focus_ring_visible
+    requirement: A visible focus ring must be provided with full Tab and Shift+Tab traversal.
+    failure_mode: Keyboard users lose track of their position.
+
+  - id: dpi_scaling
+    requirement: HiDPI and multi-monitor scale factors (1x, 1.5x, 2x) must be handled without blurring or misalignment.
+    failure_mode: The UI is blurry or misaligned on an external display.
+
+  - id: hover_cursor
+    requirement: Hover state and cursor semantics must be declared (default, clickable, disabled, draggable).
+    failure_mode: Users cannot tell whether an element is clickable.
+
+  - id: context_menu_dragdrop
+    requirement: The right-click context menu and file drag-and-drop behaviour must be declared, including drag hover feedback and rejection of unsupported types.
+    failure_mode: Right-click does nothing and dropping a file gives no feedback.
+
+  - id: native_frame
+    requirement: The title bar strategy (native or custom drawn) and the window control safe area must be declared.
+    failure_mode: A custom title bar overlaps the system window controls.
+
+  - id: large_screen_density
+    requirement: A large-screen information density strategy must be declared, including maximum content width and list row height.
+    failure_mode: Body text runs edge to edge on an ultrawide display and becomes unreadable.
+
+  - id: multi_window
+    requirement: If multiple windows or tabs are supported, state isolation and restoration must be declared.
+    failure_mode: Window state leaks between windows.
+
+evidence:
+  visual_baseline: Breakpoint matrix (800 / 1024 / 1440 / 1920 / 2560) plus per-OS screenshots
+  device_matrix: macOS / Windows / Linux plus keyboard navigation, 200% zoom and multi-monitor DPI

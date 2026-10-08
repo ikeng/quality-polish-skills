@@ -1,0 +1,50 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "$description": "app-quality-polish / design-token.json — semantic tokens, light + dark. Never reference raw hex in source.",
+  "color": {
+    "bg": {
+      "base":     { "light": "#FFFFFF", "dark": "#121212" },
+      "elevated": { "light": "#F9FAFB", "dark": "#1C1C1E" },
+      "overlay":  { "light": "#00000066", "dark": "#00000099" }
+    },
+    "text": {
+      "primary":   { "light": "#111827", "dark": "#F9FAFB" },
+      "secondary": { "light": "#6B7280", "dark": "#9CA3AF" },
+      "disabled":  { "light": "#9CA3AF", "dark": "#6B7280" },
+      "onBrand":   { "light": "#FFFFFF", "dark": "#0B1220" }
+    },
+    "brand": {
+      "primary":        { "light": "#2563EB", "dark": "#60A5FA" },
+      "primaryPressed": { "light": "#1D4ED8", "dark": "#3B82F6" }
+    },
+    "state": {
+      "success": { "light": "#16A34A", "dark": "#4ADE80" },
+      "warning": { "light": "#D97706", "dark": "#FBBF24" },
+      "danger":  { "light": "#DC2626", "dark": "#F87171" }
+    },
+    "border": {
+      "subtle": { "light": "#E5E7EB", "dark": "#2C2C2E" },
+      "strong": { "light": "#D1D5DB", "dark": "#3A3A3C" }
+    }
+  },
+  "space": { "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "2xl": 32, "3xl": 48 },
+  "radius": { "sm": 8, "md": 12, "lg": 16, "full": 999 },
+  "font": {
+    "caption": { "size": 12, "lineHeight": 16, "weight": 400 },
+    "body":    { "size": 15, "lineHeight": 22, "weight": 400 },
+    "title":   { "size": 17, "lineHeight": 22, "weight": 600 },
+    "headline":{ "size": 22, "lineHeight": 28, "weight": 700 }
+  },
+  "shadow": {
+    "card":  { "y": 1, "blur": 3, "color": "#00000014" },
+    "modal": { "y": 8, "blur": 24, "color": "#00000029" }
+  },
+  "motion": { "fast": 150, "normal": 250, "slow": 350 },
+  "easing": {
+    "enter": [0.2, 0, 0, 1],
+    "exit":  [0.4, 0, 1, 1],
+    "spring": { "stiffness": 260, "damping": 26 }
+  },
+  "touchTarget": { "min": 44, "androidMin": 48 },
+  "contrast": { "min": 4.5 }
+}

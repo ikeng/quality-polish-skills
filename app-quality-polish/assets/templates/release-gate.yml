@@ -1,0 +1,48 @@
+# app-quality-polish / release-gate.yml
+# P0 all-pass is required to release. Wire this into CI, not a spreadsheet.
+version: 1
+
+levels:
+
+  P0:
+    blocking: true
+    items:
+      - id: no_crash
+        check: crash_rate < 0.001
+      - id: no_white_screen
+        check: every page covers loading/success/empty/error/offline/noAuth
+      - id: no_jank
+        check: scroll_fps >= 58
+      - id: state_complete
+        check: component-state required_states all implemented
+      - id: touch_target
+        check: all interactive targets >= 44pt / 48dp
+      - id: a11y_contrast
+        check: text contrast >= 4.5:1 in light and dark
+      - id: error_recovery
+        check: every error state has retry/back/cached/open_settings
+
+  P1:
+    blocking: true
+    scope: core_pages
+    items:
+      - id: motion_consistent
+        check: all animations reference motion.json tokens
+      - id: dark_mode
+        check: no broken layout or contrast in dark
+      - id: copy_quality
+        check: no forbidden strings from copy.yml
+      - id: empty_error_present
+        check: empty + error designs exist for every core page
+
+  P2:
+    blocking: false
+    items:
+      - id: brand_illustration
+      - id: sound_haptics
+      - id: easter_eggs
+
+ci:
+  run_on: [release_branch, release_tag]
+  report: release-gate-report.json
+  fail_build_on: [P0, P1]

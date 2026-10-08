@@ -1,0 +1,146 @@
+# app-quality-polish / scenarios.yml  (dimension: Scenario)
+# A scenario is a user goal plus an environment plus a combination of entity states.
+# Scenario ids are stable: SCN-02 pins the P0 set by id, so do not renumber.
+version: 1
+
+scenarios:
+
+  - id: S01
+    name: First launch
+    goal: Reach the app quickly
+    entities: [app, page.home]
+    states:  [cold_start, skeleton, success]
+    expect:  Interactive in under 2s
+    exception: { fallback: retry }
+    gate: P0
+
+  - id: S02
+    name: Sign in
+    goal: Establish identity
+    entities: [page.login, comp.input.text, perm]
+    states:  [default, editing, validating, submitting, success]
+    expect:  Errors are anchored to the field
+    exception: { fallback: error_copy }
+    gate: P0
+
+  - id: S03
+    name: Search
+    goal: Find content
+    entities: [page.search, comp.list, copy]
+    states:  [recent, typing, results, empty]
+    expect:  The empty state suggests a next step
+    exception: { fallback: local_history }
+    gate: P1
+
+  - id: S04
+    name: Browse a list
+    goal: Consume content smoothly
+    entities: [page.list, comp.list, comp.image]
+    states:  [skeleton, content, loadingMore, end]
+    expect:  60fps
+    exception: { fallback: retry }
+    gate: P0
+
+  - id: S05
+    name: View detail
+    goal: Read information
+    entities: [page.detail, comp, data]
+    states:  [skeleton, success, removed]
+    expect:  Cached content is usable
+    exception: { fallback: login }
+    gate: P1
+
+  - id: S06
+    name: Submit a form
+    goal: Persist data
+    entities: [page.form, comp.button.primary, copy]
+    states:  [editing, error, correcting, submitting, success]
+    expect:  Success haptic
+    exception: { fallback: draft }
+    gate: P0
+
+  - id: S07
+    name: Pay
+    goal: Complete a transaction
+    entities: [page.pay, perm, net]
+    states:  [confirm, loading, success, failed]
+    expect:  Double submission is prevented
+    exception: { fallback: query_order }
+    gate: P0
+
+  - id: S08
+    name: Slow network
+    goal: Remain usable
+    entities: [net.slow, comp.list, cache]
+    states:  [cached, timestamp, retry]
+    expect:  No white screen
+    exception: { fallback: cache }
+    gate: P0
+
+  - id: S09
+    name: Offline
+    goal: Work from local data
+    entities: [net.offline, data]
+    states:  [offline_notice, cached]
+    expect:  The state is explicit
+    exception: { fallback: refresh_on_recovery }
+    gate: P1
+
+  - id: S10
+    name: Permission denied
+    goal: Recover gracefully
+    entities: [perm.denied, copy]
+    states:  [denied, explain, open_settings]
+    expect:  No repeated prompts
+    exception: { fallback: settings_recovery }
+    gate: P0
+
+  - id: S11
+    name: Dark mode
+    goal: Stay visually consistent
+    entities: [theme.dark, token]
+    states:  [switched, applied]
+    expect:  Contrast holds
+    exception: { fallback: block_release }
+    gate: P0
+
+  - id: S12
+    name: Large text
+    goal: Avoid broken layout
+    entities: [a11y.fontScale, page]
+    states:  [scaled, adaptive_layout]
+    expect:  Content scrolls
+    exception: { fallback: fix_clipping }
+    gate: P0
+
+  - id: S13
+    name: Accessibility
+    goal: Readable and operable
+    entities: [a11y, comp]
+    states:  [reader, focus, operate]
+    expect:  Touch targets at least 44pt
+    exception: { fallback: fix_focus_order }
+    gate: P0
+
+  - id: S14
+    name: Error recovery
+    goal: Never dead-end
+    entities: [error, copy, flow]
+    states:  [error, explain, retry, back]
+    expect:  Recoverable
+    exception: { fallback: block_release }
+    gate: P0
+
+  - id: S15
+    name: Release acceptance
+    goal: Quality gate
+    entities: [release, gate]
+    states:  [P0_pass, gray, full]
+    expect:  Metrics do not regress
+    exception: { fallback: rollback }
+    gate: P0
+
+gates:
+  P0_all_pass: true
+  must_test: [slow_network, dark_mode, large_text, a11y]
+  every_scene_has: [entry, precondition, expect, exception]

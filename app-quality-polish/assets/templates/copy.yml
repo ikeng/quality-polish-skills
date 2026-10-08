@@ -1,0 +1,53 @@
+# app-quality-polish / copy.yml
+# UI copy is design material. Empty states say why plus the next step; errors give
+# a solution; buttons use verbs. Replace the examples with the product's language
+# and keep the forbidden list in the same language as the shipped copy.
+version: 1
+
+tone:
+  voice: professional_warm
+  rules:
+    - no_jargon
+    - no_error_codes
+    - buttons_use_verbs
+    - no_bare_confirmation
+  forbidden: ["No data", "Unknown error", "Error code", "Operation failed", "Are you sure", "Confirm to continue"]
+
+empty:
+  default:  { text: "Nothing here yet. {nextStep}", action: "Create one" }
+  home:     { text: "Nothing here yet. Browse recommendations", action: "Explore" }
+  search:   { text: 'No results for "{keyword}"', action: "Try another keyword", hints: [Popular searches, Check spelling] }
+  removed:  { text: "This item is no longer available", action: "Go back" }
+
+error:
+  retry:    { text: "Could not {action}. Please try again", action: "Retry" }
+  network:  { text: "Connection is unstable. Showing cached content", action: "Refresh" }
+  timeout:  { text: "The request timed out. Check your connection and retry", action: "Retry" }
+  field:    { text: "{field} {problem}. Please review and retry" }
+  server:   { text: "Something went wrong on our side. Try again shortly", action: "Retry" }
+
+offline:
+  cached:   { text: "You are offline. Showing content cached at {time}", action: "Refresh" }
+  noCache:  { text: "You are offline and nothing is cached yet", action: "Retry" }
+
+auth:
+  required: { text: "Sign in to {feature}", action: "Sign in" }
+  expired:  { text: "Your session expired. Please sign in again", action: "Sign in" }
+
+permission:
+  camera:  { text: "Camera access is needed to {feature}", action: "Open settings" }
+  notify:  { text: "Notification access is needed for reminders", action: "Open settings" }
+  denied:  { text: "Access was denied. You can enable it in system settings", action: "Open settings" }
+
+success:
+  saved:     { text: "Saved" }
+  submitted: { text: "Submitted" }
+  deleted:   { text: "Deleted", undo: true }
+
+confirm:
+  delete: { text: "Deleting {item} cannot be undone. Delete it?", action: "Delete", cancel: "Cancel", destructive: true }
+  logout: { text: "You will need to sign in again. Sign out?", action: "Sign out", cancel: "Cancel" }
+
+list:
+  end:     { text: "No more items" }
+  loading: { text: "Loading..." }

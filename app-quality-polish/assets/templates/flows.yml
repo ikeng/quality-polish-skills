@@ -1,0 +1,128 @@
+# app-quality-polish / flows.yml  (dimension: Flow)
+# A flow = a state graph. REQUIRED: terminal_states, paths, and an explicit
+# recovery edge out of every error state. A dead end is a contract violation.
+version: 1
+
+flows:
+
+  - id: F01
+    name: Cold start
+    steps: [launch, splash, loading, success, empty, error]
+    terminal_states: [success, empty]
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: launch,  event: start,       to: splash,  path: normal }
+      - { from: splash,  event: brands_done, to: loading, path: normal }
+      - { from: loading, event: data,        to: success, path: normal }
+      - { from: loading, event: no_data,     to: empty,   path: normal }
+      - { from: loading, event: fail,        to: error,   path: error }
+      - { from: error,   event: retry,       to: loading, path: recovery }
+    feedback: { splash: brand_transition, loading: skeleton }
+    metrics:  { cold_start_p90_ms: 2000 }
+    gate: blocking
+
+  - id: F02
+    name: Sign in
+    steps: [default, editing, validating, submitting, success, error]
+    terminal_states: [success]
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: default,    event: focus,   to: editing,    path: normal }
+      - { from: editing,    event: blur,    to: validating, path: normal }
+      - { from: validating, event: invalid, to: error,      path: error }
+      - { from: validating, event: valid,   to: submitting, path: normal }
+      - { from: submitting, event: ok,      to: success,    path: normal }
+      - { from: submitting, event: fail,    to: error,      path: error }
+      - { from: error,      event: retry,   to: submitting, path: recovery }
+    feedback: { error: field_level, submitting: loading }
+    metrics:  { response_p90_ms: 100 }
+    gate: blocking
+
+  - id: F03
+    name: List loading
+    steps: [skeleton, content, loadingMore, end, error]
+    terminal_states: [end]
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: skeleton,    event: data,         to: content,     path: normal }
+      - { from: content,     event: scroll_end,   to: loadingMore, path: normal }
+      - { from: loadingMore, event: data,         to: content,     path: normal }
+      - { from: loadingMore, event: no_more,      to: end,         path: normal }
+      - { from: loadingMore, event: fail,         to: error,       path: error }
+      - { from: error,       event: retry,        to: skeleton,    path: recovery }
+    feedback: { refresh: pull_to_refresh, end: footer_copy }
+    metrics:  { fps_min: 58 }
+    gate: blocking
+
+  - id: F04
+    name: Form submit
+    steps: [idle, editing, error, submitting, success]
+    terminal_states: [success]
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: idle,       event: edit,          to: editing,    path: normal }
+      - { from: editing,    event: validate_fail, to: error,      path: error }
+      - { from: error,      event: correct,       to: editing,    path: recovery }
+      - { from: editing,    event: submit,        to: submitting, path: normal }
+      - { from: submitting, event: ok,            to: success,    path: normal }
+      - { from: submitting, event: fail,          to: error,      path: error }
+      - { from: error,      event: retry,         to: submitting, path: recovery }
+    feedback: { submitting: haptic_light, success: toast }
+    metrics:  { no_double_submit: true }
+    gate: blocking
+
+  - id: F05
+    name: Slow network recovery
+    steps: [online, slow, offline, timeout, retry]
+    terminal_states: []
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: online,  event: rtt_high,     to: slow,    path: normal }
+      - { from: slow,    event: lost,         to: offline, path: error }
+      - { from: slow,    event: no_response,  to: timeout, path: error }
+      - { from: timeout, event: retry,        to: retry,   path: recovery }
+      - { from: timeout, event: cached,       to: online,  path: recovery }
+      - { from: offline, event: network_back, to: online,  path: recovery }
+      - { from: retry,   event: ok,           to: online,  path: recovery }
+      - { from: retry,   event: fail,         to: timeout, path: error }
+    feedback: { offline: cached_notice }
+    metrics:  { availability: true }
+    gate: blocking
+
+  - id: F06
+    name: Permission request
+    steps: [notDetermined, requesting, granted, denied, explain]
+    terminal_states: [granted]
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: notDetermined, event: request,  to: requesting, path: normal }
+      - { from: requesting,    event: allow,    to: granted,    path: normal }
+      - { from: requesting,    event: deny,     to: denied,     path: error }
+      - { from: denied,        event: explain,  to: explain,    path: recovery }
+      - { from: explain,       event: settings, to: granted,    path: recovery }
+    feedback: { denied: rationale_copy }
+    metrics:  { grant_rate: true }
+    gate: blocking
+
+  - id: F07
+    name: Release gate
+    steps: [dev, ci, device, gray, full]
+    terminal_states: [full]
+    paths: [normal, error, recovery]
+    transitions:
+      - { from: dev,    event: pr,        to: ci,     path: normal }
+      - { from: ci,     event: pass,      to: device, path: normal }
+      - { from: ci,     event: fail,      to: dev,    path: error }
+      - { from: device, event: matrix_ok, to: gray,   path: normal }
+      - { from: gray,   event: stable,    to: full,   path: normal }
+      - { from: gray,   event: regress,   to: dev,    path: error }
+      - { from: gray,   event: rollback,  to: dev,    path: recovery }
+    feedback: { ci: report, gray: dashboard }
+    metrics:  { crash_rate: 0.001 }
+    gate: blocking
+
+gates:
+  paths_required: [normal, error, recovery]
+  no_dead_end: true
+  no_terminal_error_state: true
+  feedback_within_ms: 100

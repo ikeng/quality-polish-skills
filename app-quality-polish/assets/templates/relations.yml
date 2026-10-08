@@ -1,0 +1,29 @@
+# app-quality-polish / relations.yml  (dimension: Relation)
+# Relations are constraints. No cycles, no cross-layer references.
+version: 1
+
+relations: [contains, composes, uses, triggers, depends, inherits, overrides, maps, excludes, sequences]
+
+edges:
+
+  - { source: page,      relation: contains,  target: comp,              cardinality: "1:N", config: relations.yml,      gate: no_orphan_component }
+  - { source: comp,      relation: composes,  target: elem,              cardinality: "1:N", config: relations.yml,      gate: no_hardcoded_value }
+  - { source: comp,      relation: uses,      target: token,             cardinality: "N:M", config: design-token.json,  gate: semantic_token_only }
+  - { source: comp,      relation: uses,      target: motion,            cardinality: "N:M", config: motion.json,         gate: token_duration_only }
+  - { source: event,     relation: triggers,  target: motion,            cardinality: "1:N", config: motion.json,         gate: every_event_has_feedback }
+  - { source: event,     relation: triggers,  target: flow,              cardinality: "1:N", config: flows.yml,           gate: no_dead_end }
+  - { source: flow,      relation: depends,   target: data,              cardinality: "N:M", config: flows.yml,           gate: degraded_path_exists }
+  - { source: flow,      relation: depends,   target: net,               cardinality: "N:M", config: flows.yml,           gate: works_on_slow_network }
+  - { source: flow,      relation: depends,   target: perm,              cardinality: "N:M", config: flows.yml,           gate: denial_has_guidance }
+  - { source: theme.dark,relation: inherits,  target: token,             cardinality: "1:N", config: design-token.json,  gate: no_broken_layout }
+  - { source: page,      relation: overrides, target: copy,              cardinality: "1:N", config: copy.yml,            gate: tone_consistent }
+  - { source: error,     relation: maps,      target: copy,              cardinality: "1:1", config: copy.yml,            gate: no_unknown_error }
+  - { source: loading,   relation: excludes,  target: error,             cardinality: "1:1", config: states.yml,          gate: no_state_conflict }
+  - { source: flow,      relation: sequences, target: flow.step,         cardinality: "1:N", config: flows.yml,           gate: cancellable }
+
+gates:
+  forbid_cycles: true
+  forbid_cross_layer_reference: true
+  pages_must_cover_all_states: true
+  components_must_inherit_tokens: true
+  scenes_must_cover: [slow_network, dark_mode, large_text]

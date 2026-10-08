@@ -1,0 +1,58 @@
+# app-quality-polish platform profile: Mini program (WeChat / Alipay / ByteDance)
+# A mini program has no DOM. Quality bottlenecks concentrate on package size,
+# setData cost and host navigation-bar constraints.
+platform: miniprogram
+kind: platform
+label: Mini program
+unit: rpx
+runtime: [WeChat, Alipay, ByteDance]
+
+thresholds:
+  contrast_min: 4.5
+  tap_target_min_px: 44
+  main_package_max_kb: 2048
+  total_package_max_mb: 20
+  setdata_payload_max_kb: 256
+  first_screen_budget_max_kb: 200
+
+capabilities:
+
+  - id: package_split
+    requirement: Main package and subpackage boundaries plus subpackage preloading must be declared, with only first-screen assets in the main package.
+    failure_mode: The main package exceeds the limit and cannot be uploaded, or first paint waits on a subpackage.
+
+  - id: setdata_batching
+    requirement: setData must be batched with a bounded payload; passing whole objects back and per-item setData inside a long list are forbidden.
+    failure_mode: The scrolling list drops frames continuously.
+
+  - id: rpx_adaptation
+    requirement: Layout must use rpx on a 750 basis, or declare an explicit px adaptation strategy and conversion rule.
+    failure_mode: Spacing ratios distort across device widths.
+
+  - id: capsule_safe_zone
+    requirement: A custom navigation bar must avoid the capsule button safe area in the top right and must not overlap it.
+    failure_mode: The title or a button is hidden behind the capsule.
+
+  - id: image_domain_whitelist
+    requirement: Remote images must be https and their domains whitelisted in the console, with a failure placeholder.
+    failure_mode: Every image renders as a white block and the console reports an illegal domain.
+
+  - id: hover_class
+    requirement: Tap feedback must use hover-class; relying on CSS :hover is forbidden.
+    failure_mode: Taps give no feedback at all inside the mini program.
+
+  - id: virtual_list
+    requirement: Long lists must use a virtual list or recycling strategy; rendering thousands of nodes at once is forbidden.
+    failure_mode: The long list stutters and goes blank while scrolling.
+
+  - id: theme_darkmode
+    requirement: darkmode support must be declared together with a theme.json or CSS variable strategy.
+    failure_mode: The system dark theme shows glaring white surfaces.
+
+  - id: api_abstraction
+    requirement: A cross-host API abstraction layer must be declared for wx/my/tt; business code must not call the platform namespace directly.
+    failure_mode: Porting to another host requires replacing every API call.
+
+evidence:
+  visual_baseline: Screenshots per host platform (WeChat iOS, WeChat Android, Alipay, ByteDance)
+  device_matrix: Device matrix run covering small screens, notched screens, dark mode, large text, slow network and low-end devices

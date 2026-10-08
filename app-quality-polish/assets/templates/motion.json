@@ -1,0 +1,52 @@
+{
+  "$comment": "app-quality-polish / motion.json — global motion spec. Every animation references a token. All must honor reduced-motion.",
+  "defaults": {
+    "honorReducedMotion": true,
+    "maxDuration": 350
+  },
+  "animations": {
+    "page_enter": {
+      "duration": "token.motion.normal",
+      "easing": "token.easing.enter",
+      "from": { "opacity": 0, "y": 8 },
+      "to": { "opacity": 1, "y": 0 }
+    },
+    "page_exit": {
+      "duration": 200,
+      "easing": "token.easing.exit",
+      "to": { "opacity": 0, "y": -4 }
+    },
+    "modal_appear": {
+      "duration": 200,
+      "easing": "token.easing.spring",
+      "from": { "opacity": 0, "scale": 0.96 },
+      "to": { "opacity": 1, "scale": 1 }
+    },
+    "button_press": {
+      "duration": "token.motion.fast",
+      "easing": "token.easing.enter",
+      "press": { "scale": 0.98 },
+      "release": { "scale": 1 }
+    },
+    "list_insert": {
+      "duration": 200,
+      "easing": "token.easing.enter",
+      "from": { "opacity": 0, "height": 0 },
+      "to": { "opacity": 1, "height": "auto" }
+    },
+    "error_shake": {
+      "duration": 300,
+      "easing": "ease-in-out",
+      "values": [0, -4, 4, -2, 0]
+    },
+    "skeleton_shimmer": {
+      "duration": 1200,
+      "easing": "linear",
+      "loop": true
+    },
+    "shared_element_transition": {
+      "duration": 300,
+      "easing": "ease-in-out"
+    }
+  }
+}

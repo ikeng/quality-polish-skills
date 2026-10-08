@@ -1,0 +1,96 @@
+# app-quality-polish / entities.yml  (dimension: Entity)
+# Every object in the app: id, type, owner, lifecycle, config source, gate.
+version: 1
+
+entity_types: [app, page, component, element, token, motion, copy, data, user, session, net, perm, notify, theme, a11y]
+
+entities:
+
+  app:
+    type: app
+    owner: platform
+    lifecycle: install->run->update
+    source: build_config
+    gate: cold_start_ok
+
+  page.home:
+    type: page
+    owner: core-team
+    lifecycle: enter->loading->present->exit
+    source: page-state.yml
+    gate: no_white_screen
+
+  comp.button.primary:
+    type: component
+    owner: design-system
+    lifecycle: reusable
+    source: component-state.yml
+    gate: state_complete
+
+  elem.icon:
+    type: element
+    owner: design-system
+    lifecycle: render->update
+    source: design-token.json
+    gate: [aligned, contrast_ok]
+
+  token.color.brand.primary:
+    type: token
+    owner: design-system
+    lifecycle: define->reference
+    source: design-token.json
+    gate: no_hardcoded_color
+
+  motion.pageEnter:
+    type: motion
+    owner: design-system
+    lifecycle: trigger->play->end
+    source: motion.json
+    gate: [duration_token, curve_token]
+
+  copy.empty.search:
+    type: copy
+    owner: content
+    lifecycle: scene->render
+    source: copy.yml
+    gate: no_jargon
+
+  data.list:
+    type: data
+    owner: frontend
+    lifecycle: request->cache->expire
+    source: data_layer
+    gate: usable_on_slow_network
+
+  net.slow:
+    type: net
+    owner: frontend
+    lifecycle: state_watch
+    source: network_layer
+    gate: slow_network_notice
+
+  perm.camera:
+    type: perm
+    owner: frontend
+    lifecycle: notDetermined->request->granted|denied
+    source: permission_layer
+    gate: denial_guidance
+
+  theme.dark:
+    type: theme
+    owner: design-system
+    lifecycle: switch->apply
+    source: design-token.json
+    gate: no_broken_layout
+
+  a11y:
+    type: a11y
+    owner: design-system
+    lifecycle: global
+    source: a11y.yml
+    gate: a11y_baseline
+
+gates:
+  no_unregistered_entity: true
+  no_orphan_component: true
+  every_entity_has: [id, type, owner, lifecycle, source, gate]

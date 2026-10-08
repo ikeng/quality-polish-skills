@@ -1,0 +1,55 @@
+# app-quality-polish runtime profile: React Native
+# React Native is a RUNTIME: JS drives native views on iOS / Android / Web.
+# The characteristic defects are JS-thread stalls, list memory, and platform feel.
+platform: react-native
+kind: runtime
+label: React Native
+unit: logical_px
+hosts: [ios, android, web, h5, desktop]
+# NOTE: harmonyos is not a host for mainline React Native; react-native-harmony
+# is a separate fork. If you ship it, add harmonyos to hosts explicitly.
+runtime: [Hermes, Fabric, JSI]
+
+thresholds:
+  touch_target_min_lpx: 44
+  contrast_min: 4.5
+  js_frame_budget_max_ms: 16
+  bundle_size_max_kb: 1500     # Hermes bytecode for first launch
+
+capabilities:
+
+  - id: virtualized_lists
+    requirement: Long lists must use VirtualizedList or FlashList with keyExtractor and getItemLayout.
+    failure_mode: Long lists balloon in memory and go blank while scrolling.
+
+  - id: native_driver_animation
+    requirement: Animations must use useNativeDriver or Reanimated on the UI thread; per-frame setState on the JS thread is forbidden.
+    failure_mode: Animations freeze whenever JS is busy.
+
+  - id: pressable_feedback
+    requirement: Pressable must be used with a pressed state and hitSlop to guarantee the minimum touch area.
+    failure_mode: Small icons are hard to hit and taps give no feedback.
+
+  - id: safe_area_context
+    requirement: SafeAreaProvider and useSafeAreaInsets must be used for safe areas.
+    failure_mode: The notch and bottom gesture bar cover content.
+
+  - id: accessibility_props
+    requirement: accessibilityLabel, Role and State must be set, and decorative elements marked non-focusable.
+    failure_mode: Screen readers read out decorative elements too.
+
+  - id: image_caching
+    requirement: Image caching and sizing must be declared via FastImage, prefetch or resizeMode; serving original files is forbidden.
+    failure_mode: List images flicker and memory spikes.
+
+  - id: architecture_state
+    requirement: The Fabric and TurboModules migration state must be declared, or the reason for staying on the old architecture stated.
+    failure_mode: An architecture upgrade requires a full rewrite.
+
+  - id: startup_budget
+    requirement: Bundle size and first-render budget must be declared, with Hermes and inline requires enabled.
+    failure_mode: Cold start shows a white screen for too long.
+
+evidence:
+  visual_baseline: Screenshots per host platform
+  device_matrix: Device matrix run plus Performance Monitor captures (JS and UI frame rates, memory curve)

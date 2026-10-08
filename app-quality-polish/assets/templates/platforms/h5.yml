@@ -1,0 +1,53 @@
+# app-quality-polish platform profile: H5 (mobile web / in-app browser)
+# H5 runs inside someone else's container. Most defects come from viewport,
+# safe-area and host-browser differences, not from the layout itself.
+platform: h5
+kind: platform
+label: H5
+unit: px
+runtime: [iOS Safari, Chrome Android, WeChat webview, QQ/UC/system browsers]
+
+thresholds:
+  contrast_min: 4.5
+  tap_target_min_px: 44
+  input_font_size_min_px: 16
+  first_screen_budget_max_kb: 200
+  inp_max_ms: 200
+
+capabilities:
+
+  - id: viewport_fit_cover
+    requirement: The viewport meta tag must include viewport-fit=cover, otherwise every safe-area variable resolves to zero.
+    failure_mode: Safe-area handling is written but has no effect.
+
+  - id: safe_area_insets
+    requirement: env(safe-area-inset-*) must be used to handle the notch, rounded corners and Home Indicator.
+    failure_mode: A fixed bottom button is covered by the Home Indicator.
+
+  - id: dvh_not_vh
+    requirement: 100vh must not be used for full-height layouts; dvh/svh or an equivalent JS fallback is required.
+    failure_mode: The collapsing browser address bar crops the first screen and causes unexpected scrolling.
+
+  - id: tap_highlight
+    requirement: -webkit-tap-highlight-color and touch-action must be handled to remove the grey flash and the 300ms delay.
+    failure_mode: Taps flash a grey block, or double-tap zoom fires accidentally.
+
+  - id: no_sticky_hover
+    requirement: "Touch devices must not retain a hover state; isolate hover styles with @media (hover: hover) or a touch check."
+    failure_mode: A button keeps its hover style permanently after one tap.
+
+  - id: host_containers
+    requirement: The set of host containers covered (WeChat, QQ, UC, system browsers) must be declared, and their built-in navigation bar and back behaviour handled.
+    failure_mode: Sharing, back behaviour or host font scaling differ from expectations inside WeChat.
+
+  - id: overscroll
+    requirement: overscroll and rubber-band behaviour must be handled so it does not conflict with pull-to-refresh.
+    failure_mode: The whole page bounces, or a host pull-to-refresh interrupts the interaction.
+
+  - id: font_fallback
+    requirement: Custom fonts must have a system fallback and must not block first paint.
+    failure_mode: FOIT, where text is invisible while the font loads.
+
+evidence:
+  visual_baseline: Host container matrix screenshots (WeChat iOS, WeChat Android, Safari, Chrome, UC)
+  device_matrix: Device matrix run covering small screens, notched screens, dark mode, large text and slow network

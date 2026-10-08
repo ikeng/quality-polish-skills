@@ -1,0 +1,45 @@
+# app-quality-polish platform profile: Android
+# Constraints come from Material 3 and Android platform behaviours.
+platform: android
+kind: platform
+label: Android
+unit: dp
+min_version: "8.0 (API 26)"
+runtime: [Compose, View]
+
+thresholds:
+  touch_target_min_dp: 48
+  contrast_min: 4.5
+  motion_max_duration_ms: 350
+  font_scale_max: 2.0
+  body_font_min_sp: 14
+
+capabilities:
+
+  - id: insets_edge_to_edge
+    requirement: The app must be edge-to-edge and handle status bar, navigation bar and IME insets correctly.
+    failure_mode: Content is covered by the status bar or gesture pill, or the keyboard hides the focused input.
+
+  - id: sp_text
+    requirement: Text must use sp so it scales with the system font setting; using dp for text is forbidden.
+    failure_mode: Text does not grow at the largest font setting, or the layout collapses.
+
+  - id: predictive_back
+    requirement: The system back gesture and predictive back must be supported; the back key must not be intercepted without feedback.
+    failure_mode: The back gesture stops working and the user is trapped in the screen.
+
+  - id: dynamic_color
+    requirement: A Material You dynamic colour policy must be declared, or a fixed brand palette must be chosen explicitly.
+    failure_mode: Contrast fails against a dark wallpaper, or brand colour clashes with system colour.
+
+  - id: ripple_focus
+    requirement: Ripple feedback and a visible focus indicator must be provided, including for external keyboards.
+    failure_mode: Taps give no feedback, or an iOS-style press effect is used where the platform expects ripple.
+
+  - id: talkback
+    requirement: Every interactive element must have a contentDescription and decorative elements must be marked non-focusable.
+    failure_mode: TalkBack reads out decorative images.
+
+evidence:
+  visual_baseline: Core page screenshots per OEM ROM (stock, Xiaomi, Huawei, OPPO)
+  device_matrix: Device matrix run covering low-end devices, foldables, dark mode and large text

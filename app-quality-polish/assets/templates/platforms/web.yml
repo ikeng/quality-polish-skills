@@ -1,0 +1,49 @@
+# app-quality-polish platform profile: Web (desktop browser)
+# Constraints come from WCAG 2.2 AA and Core Web Vitals.
+platform: web
+kind: platform
+label: Web
+unit: px
+runtime: [Chromium, Firefox, Safari]
+
+thresholds:
+  contrast_min: 4.5
+  touch_target_min_px: 24
+  zoom_percent_min: 200
+  cls_max: 0.1
+  lcp_max_ms: 2500
+  inp_max_ms: 200
+
+capabilities:
+
+  - id: keyboard_nav
+    requirement: Every interactive element must be reachable by Tab, focus order must follow visual order, and modals must trap focus correctly.
+    failure_mode: A custom dropdown cannot be operated by keyboard, or focus escapes an open modal.
+
+  - id: visible_focus
+    requirement: A visible focus ring must be provided; outline:none without a replacement is forbidden.
+    failure_mode: Keyboard users cannot tell where they are.
+
+  - id: hover_state
+    requirement: A hover state must be declared so pointer users can identify interactivity without pressing.
+    failure_mode: Desktop users cannot predict which elements are clickable.
+
+  - id: reduced_motion
+    requirement: prefers-reduced-motion must be honoured, disabling parallax, autoplay carousels and large translate transitions.
+    failure_mode: Vestibular-sensitive users are forced through motion.
+
+  - id: semantic_html
+    requirement: Semantic elements and landmarks must be used, form controls must have labels, images must have alt text.
+    failure_mode: A soup of divs leaves screen readers unable to navigate.
+
+  - id: cursor_semantics
+    requirement: Cursor semantics must be correct -- pointer for clickable, not-allowed for disabled, grab and grabbing for draggable.
+    failure_mode: Clickable elements still show the default arrow.
+
+  - id: zoom_200
+    requirement: At 200% zoom and at a 320px viewport, no content or functionality may be lost and horizontal scrolling must not appear.
+    failure_mode: Fixed-width containers are clipped when zoomed.
+
+evidence:
+  visual_baseline: Breakpoint matrix screenshots (320 / 768 / 1024 / 1440 / 2560)
+  device_matrix: Three browser engines plus keyboard navigation, 200% zoom and screen reader

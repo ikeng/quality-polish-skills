@@ -1,0 +1,101 @@
+# app-quality-polish / states.yml  (dimension: Attribute / State)
+# Attributes + state machines. Never ship "only the default state".
+version: 1
+
+rules:
+  - every_entity_has_state_machine: true
+  - every_state_has: [entry_condition, exit_condition, visual, copy, feedback]
+  - every_error_state_has_recovery: [retry, back, cached, open_settings]
+
+state_machines:
+
+  page:
+    attrs:
+      route:   { type: string }
+      title:   { type: string }
+      cache:   { type: bool, default: false }
+      ttl:     { type: duration, default: 5m }
+    states: [idle, loading, success, empty, error, offline, noAuth]
+    transitions:
+      - { from: idle,    event: enter,          to: loading }
+      - { from: loading, event: data,           to: success }
+      - { from: loading, event: no_data,        to: empty }
+      - { from: loading, event: fail,           to: error }
+      - { from: loading, event: network_lost,   to: offline }
+      - { from: loading, event: unauthorized,   to: noAuth }
+      - { from: error,   event: retry,          to: loading }
+      - { from: offline, event: network_back,   to: loading }
+      - { from: noAuth,  event: login,          to: loading }
+    config: page-state.yml
+
+  button:
+    attrs:
+      variant:  { type: enum, values: [primary, secondary, ghost], default: primary }
+      size:     { type: enum, values: [sm, md, lg], default: md }
+      tone:     { type: enum, values: [brand, danger], default: brand }
+    states: [default, pressed, loading, success, error, disabled]
+    transitions:
+      - { from: default, event: tap,     to: pressed }
+      - { from: pressed, event: release, to: loading }
+      - { from: loading, event: ok,      to: success }
+      - { from: loading, event: fail,    to: error }
+      - { from: loading, event: timeout, to: error }
+      - { from: error,   event: retry,   to: loading }
+      - { from: "*",     event: disable, to: disabled }
+    config: component-state.yml
+
+  input:
+    attrs:
+      value: { type: string, default: "" }
+      error: { type: string | null, default: null }
+      focus: { type: bool, default: false }
+    states: [default, focus, filled, error, disabled]
+    transitions:
+      - { from: default, event: focus,          to: focus }
+      - { from: focus,   event: input,          to: filled }
+      - { from: "*",     event: validate_fail,  to: error }
+      - { from: error,   event: edit,           to: focus }
+    config: component-state.yml
+
+  list:
+    attrs:
+      page:     { type: int, default: 1 }
+      hasMore:  { type: bool, default: true }
+      cache:    { type: bool, default: true }
+    states: [skeleton, content, loadingMore, end, error, offline]
+    transitions:
+      - { from: skeleton,    event: data,       to: content }
+      - { from: content,     event: scroll_end, to: loadingMore }
+      - { from: loadingMore, event: data,       to: content }
+      - { from: loadingMore, event: no_more,    to: end }
+      - { from: loadingMore, event: fail,       to: error }
+      - { from: error,       event: retry,      to: skeleton }
+      - { from: offline,     event: network_back, to: skeleton }
+    config: page-state.yml
+
+  network:
+    attrs:
+      online: { type: bool, default: true }
+      rtt:    { type: duration }
+      retry:  { type: int, default: 3 }
+    states: [online, slow, offline, timeout, retry]
+    transitions:
+      - { from: online,  event: rtt_high,    to: slow }
+      - { from: slow,    event: lost,        to: offline }
+      - { from: slow,    event: no_response, to: timeout }
+      - { from: timeout, event: retry,       to: retry }
+      - { from: retry,   event: ok,          to: online }
+      - { from: offline, event: network_back,to: online }
+    config: network_layer
+
+  permission:
+    attrs:
+      status: { type: enum, values: [notDetermined, requesting, granted, denied, restricted] }
+    states: [notDetermined, requesting, granted, denied, restricted]
+    transitions:
+      - { from: notDetermined, event: request, to: requesting }
+      - { from: requesting,    event: allow,   to: granted }
+      - { from: requesting,    event: deny,    to: denied }
+      - { from: denied,        event: settings,to: granted }
+      - { from: restricted,    event: settings,to: granted }
+    config: permission_layer

@@ -1,0 +1,55 @@
+# app-quality-polish platform profile: HarmonyOS
+# HarmonyOS NEXT is an independent app model (ArkTS/ArkUI), not an Android skin.
+# Constraints come from ArkUI layout, HAP packaging and atomic-service conventions.
+platform: harmonyos
+kind: platform
+label: HarmonyOS
+unit: vp
+min_version: "HarmonyOS NEXT (API 12)"
+runtime: [ArkTS, ArkUI]
+
+thresholds:
+  touch_target_min_vp: 48
+  contrast_min: 4.5
+  motion_max_duration_ms: 350
+  font_scale_max: 2.0
+  main_hap_max_mb: 10
+  cold_start_max_ms: 1500
+
+capabilities:
+
+  - id: avoid_area
+    requirement: The status bar, navigation bar and cutout or curved-edge safe areas must be handled via avoidArea or immersive window APIs.
+    failure_mode: Content is covered by the cutout or the bottom navigation bar.
+
+  - id: vp_fp_units
+    requirement: Dimensions must use vp and text must use fp so it scales with the system font setting.
+    failure_mode: Text is truncated once the system font is enlarged.
+
+  - id: semantic_resources_dark
+    requirement: Colours must use semantic resources such as $r('app.color.*') with a dark qualifier directory; hardcoded colour values are forbidden.
+    failure_mode: Dark mode shows glaring white surfaces.
+
+  - id: hap_size_budget
+    requirement: HAP and HSP splitting plus resource compression must be declared, including image formats and per-density assets.
+    failure_mode: The bundle exceeds the store limit and cannot be published.
+
+  - id: lazy_foreach
+    requirement: Long lists must use LazyForEach with a reusable data source, and state must not be a deep large object that refreshes the whole tree.
+    failure_mode: List scrolling drops frames and first paint is slow.
+
+  - id: atomic_service_card
+    requirement: If an atomic-service card is offered, its refresh policy and size adaptation must be declared.
+    failure_mode: The card never refreshes or is laid out at the wrong size.
+
+  - id: accessibility_text
+    requirement: Interactive components must set accessibilityText or accessibilityGroup, and decorative elements must stay out of focus.
+    failure_mode: Screen readers can only announce the component type.
+
+  - id: continuation_state
+    requirement: If distributed continuation is declared, the continued state and its failure fallback must be specified.
+    failure_mode: State is lost after continuing on another device.
+
+evidence:
+  visual_baseline: Core page screenshots per form factor (flat, curved, foldable open and folded)
+  device_matrix: Device matrix run covering foldables, dark mode, large text, slow network and cold start

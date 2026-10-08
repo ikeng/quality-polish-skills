@@ -1,0 +1,17 @@
+# Evidence record template.
+# One file per evidence clause, named exactly <CLAUSE-ID>.yml in the evidence/ directory.
+# verify_contract.py marks the clause UNVERIFIED until status: pass, and re-checks
+# max_age_days so a stale record cannot hold a release open.
+
+clause: PRF-02                 # must equal the clause id in contract.yml
+status: pending                # pass | fail | pending  (only pass satisfies the clause)
+
+verified_by: ""                # person, team, or automation that produced this
+verified_at: ""                # ISO-8601, e.g. 2026-01-31T09:20:00Z
+artifact: ""                   # path/link to the raw measurement (report, trace, screenshot)
+
+# Only the fields named in the clause's `assert.path` are evaluated.
+measured:
+  cold_start_p90_ms: 0
+
+notes: ""

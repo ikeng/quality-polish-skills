@@ -1,0 +1,52 @@
+# app-quality-polish platform profile: iOS
+# Constraints come from Apple Human Interface Guidelines and UIKit behaviours.
+# The contract iterates this file; it does not hardcode iOS values.
+platform: ios
+kind: platform
+label: iOS
+unit: pt
+min_version: "15.0"
+runtime: [UIKit, SwiftUI]
+
+# Keys containing _min are floors (the project value must be >=),
+# keys containing _max are ceilings (the project value must be <=).
+thresholds:
+  touch_target_min_pt: 44
+  contrast_min: 4.5
+  motion_max_duration_ms: 350
+  dynamic_type_max_scale: 2.0
+  body_font_min_pt: 17
+
+capabilities:
+
+  - id: safe_area
+    requirement: Safe areas for the notch, Dynamic Island and Home Indicator must be respected; content must not be covered by system UI.
+    failure_mode: The bottom button is crushed by the Home Indicator, or content bleeds into the status bar.
+
+  - id: dynamic_type
+    requirement: Text must use Dynamic Type semantic styles and must not clip or overlap at the largest size.
+    failure_mode: Fixed font sizes truncate text at large accessibility sizes.
+
+  - id: reduce_motion
+    requirement: The system Reduce Motion setting must be honoured, disabling or replacing non-essential transitions and parallax.
+    failure_mode: Large translate or scale animations still run with Reduce Motion enabled.
+
+  - id: semantic_dark
+    requirement: Dark mode must use semantic colours (label, systemBackground and similar); naive inversion is forbidden.
+    failure_mode: Pure white cards glare in dark mode, or images invert and distort.
+
+  - id: haptics
+    requirement: Haptic trigger points must be declared and a global opt-out must exist.
+    failure_mode: Every tap vibrates, and the user cannot turn it off.
+
+  - id: swipe_back
+    requirement: The system interactive pop gesture must remain available and must not be swallowed by custom gestures or full-screen drags.
+    failure_mode: A custom carousel eats the edge swipe and the user cannot go back.
+
+  - id: voiceover
+    requirement: Every interactive element must have an accessibilityLabel and the focus order must follow reading order.
+    failure_mode: Icon-only buttons are announced as "button" with no meaning, or focus jumps around.
+
+evidence:
+  visual_baseline: Core page screenshots for every target device size
+  device_matrix: Device matrix run covering small (SE), large (Pro Max), dark mode and large text
